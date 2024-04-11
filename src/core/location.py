@@ -125,3 +125,9 @@ class Location:
 
     def get_last(self):
         return max(self.object.sprites(), key=lambda obj: obj.rect.right)
+
+    def get_right_side(self):
+        return self.get_last().rect.right
+
+    def get_left_side(self):
+        return self.object.sprites()[0].rect.left

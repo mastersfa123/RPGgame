@@ -98,9 +98,6 @@ class Enemy(Entity):
             self.tick -= 1
             self.move_right(location)
 
-
-
-
     def check_collision(self, tiles):
         self.on_ground = False
         collided_tiles = pygame.sprite.spritecollide(self.animation, tiles, False)
@@ -140,21 +137,21 @@ class Enemy(Entity):
             else:
                 self.jump()
         self.move_right(location)
-        print('='*30)
+        print('=' * 30)
 
     def move_left(self, location):
-        location.move(- self.speed)
         self.direction_right = False
-        self.position_x -= self.speed
+        if self.position_x < location.get_left_side() - 50:
+            self.position_x -= self.speed
         if self.is_jumping:
             self.animation = self.jump
         else:
             self.animation = self.animation_walk
 
     def move_right(self, location):
-        location.move(self.speed)
         self.direction_right = True
-        self.position_x += self.speed
+        if self.position_x < location.get_right_side() - 50:
+            self.position_x += self.speed
         self.animation = self.animation_walk
 
 
