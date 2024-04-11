@@ -2,6 +2,31 @@ from .entity import Enemy
 import pygame
 
 
+# class EnemyGroup(pygame.sprite.Group):
+#     def draw(
+#             self, surface, bgsurf=None, special_flags=0,
+#     ):
+#         sprites = self.sprites()
+#         if hasattr(surface, "blits"):
+#             self.spritedict.update(
+#                 zip(
+#                     sprites,
+#                     surface.blits(
+#                         (spr.animation.current_image, spr.animation.rect, None, special_flags) for spr in sprites
+#                     ),
+#                 )
+#             )
+#         else:
+#             for spr in sprites:
+#                 self.spritedict[spr] = surface.blit(
+#                     spr.animation.current_image, spr.animation.rect, None, special_flags
+#                 )
+#         self.lostsprites = []
+#         dirty = self.lostsprites
+#
+#         return dirty
+
+
 class Tiles(pygame.sprite.Sprite):
     def __init__(self, x, y, img):
         super().__init__()
@@ -69,29 +94,34 @@ class Location:
         self.decor.add(Decoration(150, 570, 'assets/decoration/fence1.png'))
         self.buildings = pygame.sprite.Group()
         self.buildings.add(Building(525, 570))
+
         self.enemies = pygame.sprite.Group()
         self.enemies.add(Enemy())
+
         self.object = pygame.sprite.Group()
-        self.object.add(self.tiles, self.decor, self.buildings, self.enemies)
+        self.object.add(self.tiles, self.decor, self.buildings)
 
     def draw(self, screen):
         for i in self.bg:
             screen.blit(i, (0, 0))
         self.object.draw(screen)
-        # self.enemies.update(screen, self)
-        # self.tiles.draw(screen)
-        # self.decor.draw(screen)
-        # self.buildings.draw(screen)
+        for enemy in self.enemies.sprites():
+            enemy.update(screen, self)
 
     def move(self, delta_x):
         if delta_x > 0:
             if self.get_last().rect.right >= self.width:
                 for obj in self.object:
                     obj.rect.x -= delta_x
+                for enemy in self.enemies.sprites():
+                    enemy.position_x -= delta_x
+
         elif delta_x < 0:
             if self.object.sprites()[0].rect.left <= delta_x:
                 for obj in self.object:
                     obj.rect.x -= delta_x
+                for enemy in self.enemies.sprites():
+                    enemy.position_x -= delta_x
 
     def get_last(self):
         return max(self.object.sprites(), key=lambda obj: obj.rect.right)

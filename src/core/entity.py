@@ -14,6 +14,7 @@ class Animation:
         else:
             self.frames = frames
         self.rect = self.frames[self.current_frame].get_rect()
+        self.current_image = self.frames[self.current_frame]
 
     def update(self, x, y):
         self.clock.tick(self.speed)
