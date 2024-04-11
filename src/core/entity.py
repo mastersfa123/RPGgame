@@ -55,9 +55,21 @@ class Entity(pygame.sprite.Sprite):
         self.level += 1
 
 
+class Pattern:
+    def __init__(self, action, tick_count=30):
+        self.tick_count = tick_count
+        self.action = action
+
+    def __call__(self, *args, **kwargs):
+        self.action(*args, **kwargs)
+
+
 class Enemy(Entity):
     def __init__(self, name='axe_warrior', x=300, y=300, *args, **kwargs):
         super().__init__(name, x, y)
+        self.animation_idle = Animation([
+            pygame.image.load(f'assets/enemies/axe_warrior/idle/idle{i}.png') for i in range(1, 7)
+        ], 20)
         self.animation_walk = Animation([
             pygame.image.load(f'assets/enemies/axe_warrior/walk/walk{i}.png') for i in range(1, 7)
         ], 20)
@@ -67,7 +79,7 @@ class Enemy(Entity):
         self.animation_jump = Animation([
             pygame.image.load(f'assets/enemies/axe_warrior/walk/walk{i}.png') for i in range(1, 7)
         ], 20)
-        self.animation = self.animation_walk
+        self.animation = self.animation_idle
         self.direction_right = True
         self.on_ground = False
         self.gravity = 15
@@ -75,6 +87,19 @@ class Enemy(Entity):
         self.jump_force = 8
         self.jump_count = self.jump_force
         self.rect = self.animation.rect
+        self.tick_count = 15
+        self.tick = self.tick_count
+
+    def walking(self, location):
+        if self.tick > 0 and self.tick != self.tick_count:
+            self.tick += 1
+            self.move_left(location)
+        elif self.tick_count < 0 and self.tick != -self.tick_count:
+            self.tick -= 1
+            self.move_right(location)
+
+
+
 
     def check_collision(self, tiles):
         self.on_ground = False
@@ -104,6 +129,7 @@ class Enemy(Entity):
         self.animation = self.animation_fall
 
     def update(self, screen, location):
+        self.animation = self.animation_idle
         self.animation.update(self.position_x, self.position_y)
         self.animation.draw(screen, self.direction_right)
         self.check_collision(location.tiles)
@@ -113,6 +139,23 @@ class Enemy(Entity):
                 self.fall()
             else:
                 self.jump()
+        self.move_right(location)
+        print('='*30)
+
+    def move_left(self, location):
+        location.move(- self.speed)
+        self.direction_right = False
+        self.position_x -= self.speed
+        if self.is_jumping:
+            self.animation = self.jump
+        else:
+            self.animation = self.animation_walk
+
+    def move_right(self, location):
+        location.move(self.speed)
+        self.direction_right = True
+        self.position_x += self.speed
+        self.animation = self.animation_walk
 
 
 class Player(pygame.sprite.Sprite):
