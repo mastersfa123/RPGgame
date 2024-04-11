@@ -74,7 +74,6 @@ class Location:
         self.object = pygame.sprite.Group()
         self.object.add(self.tiles, self.decor, self.buildings, self.enemies)
 
-
     def draw(self, screen):
         for i in self.bg:
             screen.blit(i, (0, 0))
