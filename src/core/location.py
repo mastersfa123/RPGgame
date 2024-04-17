@@ -101,12 +101,15 @@ class Location:
         self.object = pygame.sprite.Group()
         self.object.add(self.tiles, self.decor, self.buildings)
 
+    def update(self, screen, player):
+        self.draw(screen)
+        for enemy in self.enemies.sprites():
+            enemy.update(screen, self, player)
+
     def draw(self, screen):
         for i in self.bg:
             screen.blit(i, (0, 0))
         self.object.draw(screen)
-        for enemy in self.enemies.sprites():
-            enemy.update(screen, self)
 
     def move(self, delta_x):
         if delta_x > 0:

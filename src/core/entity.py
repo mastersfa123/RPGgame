@@ -1,3 +1,5 @@
+from abc import ABC, abstractmethod
+
 import pygame
 
 
@@ -41,7 +43,7 @@ class Entity(pygame.sprite.Sprite):
         self.name = name
         self.health = 100
         self.base_damage = 10
-        self.speed = 10
+        self.speed = 7
         self.level = 1
         self.intelligence = 1
         self.stamina = 10
@@ -55,13 +57,54 @@ class Entity(pygame.sprite.Sprite):
         self.level += 1
 
 
-class Pattern:
-    def __init__(self, action, tick_count=30):
+class Pattern(ABC):
+    def __init__(self, obj, tick_count=30):
         self.tick_count = tick_count
-        self.action = action
+        self.obj = obj
+
+    @abstractmethod
+    def update(self, *args, **kwargs):
+        raise NotImplementedError
 
     def __call__(self, *args, **kwargs):
-        self.action(*args, **kwargs)
+        self.update(*args, **kwargs)
+
+
+class WalkPattern(Pattern):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.tick_count = 25
+        self.tick = 0
+        self.walk_left = True
+        self.walk = True
+        self._walk_dilay = 8
+        self.walk_dilay = self._walk_dilay
+
+    def update(self, location):
+        if self.walk:
+            if self.walk_left:
+                self.obj.move_left(location)
+                self.tick += 1
+            else:
+                self.obj.move_right(location)
+                self.tick -= 1
+
+            if self.tick == self.tick_count:
+                self.walk_left = False
+                self.walk = False
+            elif self.tick == 0:
+                self.walk_left = True
+                self.walk = False
+        else:
+            if self.walk_dilay == 0:
+                self.walk_dilay = self._walk_dilay
+                self.walk = True
+            else:
+                self.walk_dilay -= 1
+
+
+RED = (255, 0, 0)
 
 
 class Enemy(Entity):
@@ -87,16 +130,24 @@ class Enemy(Entity):
         self.jump_force = 8
         self.jump_count = self.jump_force
         self.rect = self.animation.rect
-        self.tick_count = 15
-        self.tick = self.tick_count
 
-    def walking(self, location):
-        if self.tick > 0 and self.tick != self.tick_count:
-            self.tick += 1
-            self.move_left(location)
-        elif self.tick_count < 0 and self.tick != -self.tick_count:
-            self.tick -= 1
-            self.move_right(location)
+        self.tick_count = 25
+        self.tick = 0
+        self.walk_left = True
+        self.walk = True
+        self._walk_dilay = 8
+        self.walk_dilay = self._walk_dilay
+
+        self.vision = pygame.rect.Rect(
+            self.animation.rect[:2],
+            (300, 300)
+        )
+
+        self.patterns = {
+            'walk': WalkPattern(self)
+        }
+
+        self.current_patten = self.patterns.get('walk')
 
     def check_collision(self, tiles):
         self.on_ground = False
@@ -125,8 +176,19 @@ class Enemy(Entity):
         self.position_y += self.gravity
         self.animation = self.animation_fall
 
-    def update(self, screen, location):
-        self.animation = self.animation_idle
+    def vision_collide(self, player):
+        if self.vision.colliderect(player.animation):
+            pass
+
+    def vision_update(self, screen):
+        self.vision.center = self.rect.center
+
+        pygame.draw.rect(screen, RED, self.vision)
+
+    def update(self, screen, location, player):
+        self.rect = self.animation.rect
+
+        self.vision_update(screen)
         self.animation.update(self.position_x, self.position_y)
         self.animation.draw(screen, self.direction_right)
         self.check_collision(location.tiles)
@@ -134,25 +196,24 @@ class Enemy(Entity):
         if not self.on_ground:
             if not self.is_jumping:
                 self.fall()
-            else:
-                self.jump()
-        self.move_right(location)
+
+        self.current_patten(location)
+
+        self.vision_collide(player)
+
         print('=' * 30)
 
     def move_left(self, location):
         self.direction_right = False
-        if self.position_x < location.get_left_side() - 50:
+        if self.position_x > location.get_left_side() + 50:
             self.position_x -= self.speed
-        if self.is_jumping:
-            self.animation = self.jump
-        else:
             self.animation = self.animation_walk
 
     def move_right(self, location):
         self.direction_right = True
         if self.position_x < location.get_right_side() - 50:
             self.position_x += self.speed
-        self.animation = self.animation_walk
+            self.animation = self.animation_walk
 
 
 class Player(pygame.sprite.Sprite):
