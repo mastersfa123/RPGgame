@@ -2,31 +2,6 @@ from .entity import Enemy
 import pygame
 
 
-# class EnemyGroup(pygame.sprite.Group):
-#     def draw(
-#             self, surface, bgsurf=None, special_flags=0,
-#     ):
-#         sprites = self.sprites()
-#         if hasattr(surface, "blits"):
-#             self.spritedict.update(
-#                 zip(
-#                     sprites,
-#                     surface.blits(
-#                         (spr.animation.current_image, spr.animation.rect, None, special_flags) for spr in sprites
-#                     ),
-#                 )
-#             )
-#         else:
-#             for spr in sprites:
-#                 self.spritedict[spr] = surface.blit(
-#                     spr.animation.current_image, spr.animation.rect, None, special_flags
-#                 )
-#         self.lostsprites = []
-#         dirty = self.lostsprites
-#
-#         return dirty
-
-
 class Tiles(pygame.sprite.Sprite):
     def __init__(self, x, y, img):
         super().__init__()

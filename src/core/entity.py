@@ -70,6 +70,17 @@ class Pattern(ABC):
         self.update(*args, **kwargs)
 
 
+class PatternAttack(Pattern):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.tick_count = 5
+        self.tick = 0
+
+    def update(self, location, player):
+        pass
+
+
 class WalkPattern(Pattern):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
