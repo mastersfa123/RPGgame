@@ -71,14 +71,14 @@ class Pattern(ABC):
 
 
 class PatternAttack(Pattern):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
 
-        self.tick_count = 5
-        self.tick = 0
-
-    def update(self, location, player):
-        pass
+    def update(self, location, player, *args, **kwargs):
+        if player.position_x - 100 > self.obj.position_x:
+            self.obj.move_right(location)
+        elif player.position_x + 100 < self.obj.position_x:
+            self.obj.move_left(location)
+        else:
+            self.obj.attack(player)
 
 
 class WalkPattern(Pattern):
@@ -92,7 +92,7 @@ class WalkPattern(Pattern):
         self._walk_dilay = 8
         self.walk_dilay = self._walk_dilay
 
-    def update(self, location):
+    def update(self, location, *args, **kwargs):
         if self.walk:
             if self.walk_left:
                 self.obj.move_left(location)
@@ -158,10 +158,11 @@ class Enemy(Entity):
         )
 
         self.patterns = {
-            'walk': WalkPattern(self)
+            'walk': WalkPattern(self),
+            'attack': PatternAttack(self),
         }
 
-        self.current_patten = self.patterns.get('walk')
+        self.current_pattern = self.patterns.get('walk')
 
     def check_collision(self, tiles):
         self.on_ground = False
@@ -188,11 +189,10 @@ class Enemy(Entity):
 
     def fall(self):
         self.position_y += self.gravity
-        self.animation = self.animation_fall
 
     def vision_collide(self, player):
         if self.vision.colliderect(player.animation):
-            pass
+            self.current_pattern = self.patterns.get('attack')
 
     def vision_update(self, screen):
         self.vision.center = self.rect.center
@@ -206,17 +206,14 @@ class Enemy(Entity):
         self.animation.update(self.position_x, self.position_y)
         self.animation.draw(screen, self.direction_right)
         self.check_collision(location.tiles)
-        self.animation = self.animation_attack
 
         if not self.on_ground:
             if not self.is_jumping:
                 self.fall()
 
-        self.current_patten(location)
+        self.current_pattern(location, player)
 
         self.vision_collide(player)
-
-        print('=' * 30)
 
     def move_left(self, location):
         self.direction_right = False
@@ -229,6 +226,13 @@ class Enemy(Entity):
         if self.position_x < location.get_right_side() - 50:
             self.position_x += self.speed
             self.animation = self.animation_walk
+
+    def attack(self, player):
+        self.animation = self.animation_attack
+        if player.position_x > self.position_x and self.direction_right:
+            player.get_damage(100)
+        elif player.position_x < self.position_x and not self.direction_right:
+            player.get_damage(100)
 
 
 class Player(pygame.sprite.Sprite):
@@ -338,3 +342,6 @@ class Player(pygame.sprite.Sprite):
     def fall(self):
         self.position_y += self.gravity
         self.animation = self.animation_fall
+
+    def get_damage(self, damage):
+        pass
