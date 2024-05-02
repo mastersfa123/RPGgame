@@ -133,6 +133,9 @@ class Enemy(Entity):
         self.animation_jump = Animation([
             pygame.image.load(f'assets/enemies/axe_warrior/walk/walk{i}.png') for i in range(1, 7)
         ], 20)
+        self.animation_attack = Animation([
+            pygame.image.load(f'assets/enemies/axe_warrior/attack/attack{i}.png') for i in range(1, 7)
+        ], 20)
         self.animation = self.animation_idle
         self.direction_right = True
         self.on_ground = False
@@ -203,6 +206,7 @@ class Enemy(Entity):
         self.animation.update(self.position_x, self.position_y)
         self.animation.draw(screen, self.direction_right)
         self.check_collision(location.tiles)
+        self.animation = self.animation_attack
 
         if not self.on_ground:
             if not self.is_jumping:
